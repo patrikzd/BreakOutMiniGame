@@ -6,40 +6,46 @@ import android.graphics.Paint;
 
 import androidx.core.content.ContextCompat;
 
-public class Player {
-    private double rectangleWidth;
-    private double rectangleHeight;
-    private Paint paint;
-    private float left = -1;
-    private float top;
+public class Player extends GameObject{
 
-    public Player(Context context, double rectangleWidth, double rectangleHeight) {
+    private float rectangleWidth;
+    private float rectangleHeight;
+    public float recWight; //right
+    public float recHeight; //bottom
+
+    public Player(Context context, float rectangleWidth, float rectangleHeight, float positionY, float positionX) {
+        super(positionX, positionY);
+
         this.rectangleWidth = rectangleWidth;
         this.rectangleHeight = rectangleHeight;
 
-        paint = new Paint();
         int color = ContextCompat.getColor(context, R.color.player);
         paint.setColor(color);
     }
 
     public void draw(Canvas canvas) {
 
-        if (left == -1){
-            left = (canvas.getWidth() - (float) rectangleWidth) / 2 ; // Rectangle position X
+        if (positionX == 0){
+            positionX = (canvas.getWidth() - rectangleWidth) / 2 ;
         }
 
-        top = (canvas.getHeight() - (float) rectangleHeight) - 150f; // Rectangle position Y
-        float right = left + (float) rectangleWidth; // Rectangle Width
-        float bottom = top + (float) rectangleHeight; // Rectangle Height
+        positionY = (canvas.getHeight() -  rectangleHeight) - 150f;
+        //positionX, positionY, right, bottom, paint
+        recWight  = positionX + rectangleWidth; // Rectangle Width
+        recHeight = positionY +  rectangleHeight; // Rectangle Height
 
-        canvas.drawRect(left, top, right, bottom, paint);
+        canvas.drawRect(positionX, positionY, recWight, recHeight, paint);
     }
 
     public void update() {
     }
 
-    public void setPosition(double positionX) {
-        left = (float) positionX;
+    public void setPosition(float positionX) {
+        this.positionX = positionX-100;
+    }
+
+    public float rectangleWidth() {
+        return recWight;
     }
 }
 

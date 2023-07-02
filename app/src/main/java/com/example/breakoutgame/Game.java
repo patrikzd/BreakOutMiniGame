@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat;
  */
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private final Player player;
+    private final Ball ball;
     private GameLoop gameLoop;
     private Context context;
 
@@ -30,7 +31,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         gameLoop = new GameLoop(this, surfaceHolder);
 
         //Initialize player
-        player = new Player(context, 200,70);
+        player = new Player(context, 200,70, 0, 0);
+        ball = new Ball(context, 500,50, player);
 
         setFocusable(true);
     }
@@ -51,10 +53,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         //handle touch event actions
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                player.setPosition((double) event.getX());
+                player.setPosition(event.getX());
                 return true;
             case MotionEvent.ACTION_MOVE:
-                player.setPosition((double) event.getX());
+                player.setPosition(event.getX());
                 return true;
         }
 
@@ -73,6 +75,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         drawFPS(canvas);
 
         player.draw(canvas);
+        ball.draw(canvas);
     }
 
     public void drawUps(Canvas canvas){
@@ -96,5 +99,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void update() {
         //Update game state
         player.update();
+        ball.update();
     }
 }
