@@ -3,6 +3,7 @@ package com.example.breakoutgame;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -14,6 +15,7 @@ import androidx.core.content.ContextCompat;
     Game manages all objects in the game and is responsible for updating all states and render all objects
  */
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
+    private final Player player;
     private GameLoop gameLoop;
     private Context context;
 
@@ -26,6 +28,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
         this.context = context;
         gameLoop = new GameLoop(this, surfaceHolder);
+
+        //Initialize player
+        player = new Player(context, 200,70);
 
         setFocusable(true);
     }
@@ -41,6 +46,22 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        //handle touch event actions
+        switch (event.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                player.setPosition((double) event.getX());
+                return true;
+            case MotionEvent.ACTION_MOVE:
+                player.setPosition((double) event.getX());
+                return true;
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
 
     }
@@ -50,6 +71,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         super.draw(canvas);
         drawUps(canvas);
         drawFPS(canvas);
+
+        player.draw(canvas);
     }
 
     public void drawUps(Canvas canvas){
@@ -72,5 +95,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
     public void update() {
         //Update game state
+        player.update();
     }
 }
