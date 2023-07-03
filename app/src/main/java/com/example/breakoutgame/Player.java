@@ -2,22 +2,15 @@ package com.example.breakoutgame;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 
 import androidx.core.content.ContextCompat;
 
 public class Player extends GameObject{
 
-    private float rectangleWidth;
-    private float rectangleHeight;
-    public float recWight; //right
-    public float recHeight; //bottom
+    private float rightX;
+    private float bottomY;
 
-    public Player(Context context, float rectangleWidth, float rectangleHeight, float positionY, float positionX) {
-        super(positionX, positionY);
-
-        this.rectangleWidth = rectangleWidth;
-        this.rectangleHeight = rectangleHeight;
+    public Player(Context context) {
 
         int color = ContextCompat.getColor(context, R.color.player);
         paint.setColor(color);
@@ -25,28 +18,31 @@ public class Player extends GameObject{
 
     public void draw(Canvas canvas) {
 
-        if (positionX == 0){
-            positionX = (canvas.getWidth() - rectangleWidth) / 2 ;
+        if (leftX == 0){
+            leftX = canvas.getWidth() / 2 - 100;
         }
+        rightX = leftX + 200;
 
-        positionY = (canvas.getHeight() -  rectangleHeight) - 150f;
-        //positionX, positionY, right, bottom, paint
-        recWight  = positionX + rectangleWidth; // Rectangle Width
-        recHeight = positionY +  rectangleHeight; // Rectangle Height
+        topY = canvas.getHeight() - 150;
+        bottomY = topY + 75;
 
-        canvas.drawRect(positionX, positionY, recWight, recHeight, paint);
+        canvas.drawRect(leftX, topY, rightX, bottomY, paint);
     }
 
     public void update() {
     }
 
     public void setPosition(float positionX) {
-        this.positionX = positionX-100;
+        this.leftX = positionX-100;
+        this.rightX = this.leftX + 200;
     }
 
-    public float rectangleWidth() {
-        return recWight;
+    public float getRightX() {
+        return rightX;
+    }
+
+    public float getBottomY() {
+        return bottomY;
     }
 }
 
-//   android:screenOrientation="landscape"

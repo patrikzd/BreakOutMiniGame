@@ -11,6 +11,9 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
     Game manages all objects in the game and is responsible for updating all states and render all objects
  */
@@ -19,6 +22,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private final Ball ball;
     private GameLoop gameLoop;
     private Context context;
+    private List<BreakingBlocks> breakingBlocksList = new ArrayList<BreakingBlocks>();
 
     public Game(Context context) {
         super(context);
@@ -31,9 +35,13 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         gameLoop = new GameLoop(this, surfaceHolder);
 
         //Initialize player
-        player = new Player(context, 200,70, 0, 0);
-        ball = new Ball(context, 500,50, player);
+        player = new Player(context);
 
+        for (int i = 1; i <= 20; i++) {
+            breakingBlocksList.add(new BreakingBlocks(context, player, i));
+        }
+
+        ball = new Ball(context, player, breakingBlocksList);
         setFocusable(true);
     }
 
@@ -53,8 +61,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         //handle touch event actions
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                player.setPosition(event.getX());
-                return true;
             case MotionEvent.ACTION_MOVE:
                 player.setPosition(event.getX());
                 return true;
@@ -76,6 +82,9 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
 
         player.draw(canvas);
         ball.draw(canvas);
+        for (BreakingBlocks breakingBlocksListArray: breakingBlocksList){
+            breakingBlocksListArray.draw(canvas);
+        }
     }
 
     public void drawUps(Canvas canvas){
