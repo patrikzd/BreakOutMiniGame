@@ -56,11 +56,6 @@ public class BreakingBlocks extends GameObject{
         canvas.drawRect(leftX, topY, rightX, bottomY, paint);
     }
 
-    @Override
-    public void update(Canvas canvas) {
-
-    }
-
     public float getRightX() {
         return rightX;
     }

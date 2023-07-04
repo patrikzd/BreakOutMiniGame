@@ -2,11 +2,11 @@ package com.example.breakoutgame;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class Ball extends GameObject{
@@ -15,7 +15,7 @@ public class Ball extends GameObject{
     private float ballSpeed = 30;
     private final Player player;
     private final float ballRadius = 30;
-    private boolean hit = false;
+    private boolean ballUpwardMovement = false;
     private boolean firstDraw = true;
     private float ballXChanges = 0;
     private List<BreakingBlocks> breakingBlocksList = new ArrayList<BreakingBlocks>();
@@ -26,34 +26,46 @@ public class Ball extends GameObject{
         this.player = player;
         this.breakingBlocksList = breakingBlocksList;
 
-        int color = ContextCompat.getColor(context, R.color.enemy);
+        int color = Color.GREEN;
         paint.setColor(color);
     }
 
     @Override
     public void draw(Canvas canvas) {
         if (firstDraw) {
-            topY = canvas.getHeight() / 2;
-            leftX = canvas.getWidth() / 2;
+            canvasWidth = canvas.getWidth();
+            canvasHeight = canvas.getHeight();
+            topY = canvasHeight / 2;
+            leftX = canvasWidth / 2;
             firstDraw = false;
         }
         canvas.drawCircle(leftX, topY, ballRadius, paint);
     }
 
-    @Override
     public void update(Canvas canvas) {
-        double paddleWidth = player.getRightX() - player.getLeftX(); // Calculate paddle Width
-        double ballHit = leftX - player.getLeftX(); // Calculate where on the paddle did the ball hit
         paint.setTextSize(50);
-        canvas.drawText("Hit: " + hit, 100, 600, paint);
-        canvas.drawText("leftX: " + leftX, 100, 700, paint);
-        canvas.drawText("topY: " + topY, 100, 800, paint);
+        canvas.drawText("Lives Remaining: " + player.getLivesRemaining(), 0, 100, paint);
+        canvas.drawText("Bricks Destroyed: " + breakingBlocksList2.size(), canvasWidth/2, 100, paint);
 
-        if (topY > canvas.getHeight()){
-            player.reduceLives();
-            firstDraw = true;
+
+        if (checkIfBallIsLost()) {
             return;
         }
+        checkIfBallHitBlocks();
+        setBallMovement();
+        changeBallMovementCoordinates();
+
+    }
+    private boolean checkIfBallIsLost() {
+        if (topY > canvasHeight){
+            player.reduceLives();
+            firstDraw = true;
+            ballXChanges = 0;
+            return true;
+        }
+        return false;
+    }
+    private void checkIfBallHitBlocks() {
         for (BreakingBlocks breakingBlocksListArray: breakingBlocksList){
             if (leftX + ballRadius >= breakingBlocksListArray.getLeftX() && leftX - ballRadius <= breakingBlocksListArray.getRightX() &&
                     topY + ballRadius >= breakingBlocksListArray.getTopY() && topY - ballRadius <= breakingBlocksListArray.getBottomY()){
@@ -61,23 +73,23 @@ public class Ball extends GameObject{
                 BreakingBlocks var = breakingBlocksList.stream().filter(id -> id.blockNumber == breakingBlocksListArray.blockNumber).findFirst().get();
                 breakingBlocksList2.add(var);
                 if (topY >= breakingBlocksListArray.getBottomY()){
-                    hit = false;
+                    ballUpwardMovement = false;
                 }
                 if (topY <= breakingBlocksListArray.getTopY()){
-                    hit = true;
+                    ballUpwardMovement = true;
                 }
-                //breakingBlocksList.removeIf(id -> id.blockNumber == breakingBlocksListArray.blockNumber);
-                //breakingBlocksList.remove(var);
-                ballSpeed = 10 + breakingBlocksList2.size();
+                ballSpeed = 30 + breakingBlocksList2.size(); //Increase ball speed
             }
         }
-        paint.setTextSize(50);
-
         breakingBlocksList.removeAll(breakingBlocksList2);
+    }
+    private void setBallMovement(){
+        double paddleWidth = player.getRightX() - player.getLeftX(); // Calculate paddle Width
+        double ballHit = leftX - player.getLeftX(); // Calculate where on the paddle did the ball hit
 
         if (leftX + ballRadius >= player.getLeftX() && leftX - ballRadius <= player.getRightX() &&
                 topY + ballRadius >= player.getTopY() && topY - ballRadius <= player.getBottomY()){
-            hit = true;
+            ballUpwardMovement = true;
             if ((ballHit - paddleWidth / 2 <= 20) && ((ballHit - paddleWidth / 2) >= -20))
             {
                 ballXChanges = 0;
@@ -87,22 +99,29 @@ public class Ball extends GameObject{
                 ballXChanges = (float) (-(paddleWidth/2 - ballHit)*0.1);
             }
         } else if ((topY - ballRadius <= 0 && leftX - ballRadius <= 0) ||
-                (leftX + ballRadius >= canvas.getWidth() && topY - ballRadius <= 0) ||
-                (leftX - ballRadius <= 0 && topY + ballRadius >= canvas.getHeight()) ||
-                (leftX + ballRadius >= canvas.getWidth() && topY + ballRadius >= canvas.getHeight()) ||
+                (leftX + ballRadius >= canvasWidth && topY - ballRadius <= 0) ||
+                (leftX - ballRadius <= 0 && topY + ballRadius >= canvasHeight) ||
+                (leftX + ballRadius >= canvasWidth && topY + ballRadius >= canvasHeight) ||
                 (topY - ballRadius <= 0)) {
-            hit = false;
+            ballUpwardMovement = false;
         }
-
-        if ((leftX - ballRadius <= 0) || (leftX + ballRadius >= canvas.getWidth())) {
+    }
+    private void changeBallMovementCoordinates(){
+        if ((leftX - ballRadius <= 0) || (leftX + ballRadius >= canvasWidth)) {
             ballXChanges = -ballXChanges;
         }
-
-        if (hit){
+        if (ballUpwardMovement){
             topY = topY - ballSpeed;
         } else {
             topY = topY + ballSpeed;
         }
         leftX = leftX + ballXChanges;
+    }
+    public void resetBall() {
+        breakingBlocksList2 = new ArrayList<BreakingBlocks>();
+        topY = canvasHeight / 2;
+        leftX = canvasWidth / 2;
+        ballSpeed = 30;
+        ballXChanges = 0;
     }
 }

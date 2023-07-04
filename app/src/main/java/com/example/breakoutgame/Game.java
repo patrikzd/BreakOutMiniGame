@@ -28,19 +28,25 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private List<BreakingBlocks> breakingBlocksList = new ArrayList<BreakingBlocks>();
     Rect retryTextBounds = new Rect();
     Rect exitTextBounds = new Rect();
-    boolean firstStart = true;
+    int level = 1;
+    int canvasHeight;
+    int canvasWidth;
+
 
     public Game(Context context) {
         super(context);
 
-        //Get surface holder and add callback
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
 
         gameLoop = new GameLoop(this, surfaceHolder);
-
-        initObjects();
-        //Initialize player
+        breakingBlocksList = new ArrayList<BreakingBlocks>();
+        player = new Player(getContext());
+        for (int i = 1; i <= 9 + level; i++) {
+            breakingBlocksList.add(new BreakingBlocks(getContext(), player, i));
+        }
+        ball = new Ball(getContext(), player, breakingBlocksList);
+        setFocusable(true);
     }
 
     @Override
@@ -60,26 +66,25 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                if (gameLoop.isAlive()) {
+                if (!playerLost()) {
                     player.setPosition(event.getX());
-                    System.out.println("hihi");
                     return true;
-                } else {
+                } else{
                     float clickX = event.getX();
                     float clickY = event.getY();
 
                     // Calculate the bounds of the text on the canvas
-                    float textLeft = 540 - retryTextBounds.width() / 2;
-                    float textRight = 540 + retryTextBounds.width() / 2;
-                    float textTop = 598 + 150 - retryTextBounds.height();
-                    float textBottom = 598 + 150;
+                    float textLeft = canvasWidth / 2 - retryTextBounds.width() / 2;
+                    float textRight = canvasWidth / 2 + retryTextBounds.width() / 2;
+                    float textTop = canvasHeight / 3 + 150 - retryTextBounds.height();
+                    float textBottom = canvasHeight / 3 + 150;
 
 
                     if (clickX >= textLeft && clickX <= textRight && clickY >= textTop && clickY <= textBottom) {
-                        // Player clicked on the "Retry" text, perform the desired action here
-                        // For example, you can call a method to retry the game
-                        initObjects();
-                        gameLoop.startLoop();
+                        player.playerReset();
+                        ball.resetBall();
+                        setLevelOne();
+                        createLevel();
                     } else if (clickX >= textLeft && clickX <= textRight && clickY >= textTop + 150 && clickY <= textBottom + 150) {
                         System.exit(0);
                     }
@@ -98,8 +103,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        drawUps(canvas);
-        drawFPS(canvas);
 
         player.draw(canvas);
         ball.draw(canvas);
@@ -108,27 +111,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    public void drawUps(Canvas canvas){
-        String averageUps = Double.toString(gameLoop.getAverageUps());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(getContext(), R.color.magenta);
-        paint.setColor(color);
-        paint.setTextSize(50);
-        canvas.drawText("UPS: " + averageUps, 100, 100, paint);
-    }
-
-    public void drawFPS(Canvas canvas){
-        String averageUps = Double.toString(gameLoop.getAverageFPS());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(getContext(), R.color.magenta);
-        paint.setColor(color);
-        paint.setTextSize(50);
-        canvas.drawText("FPS: " + averageUps, 100, 200, paint);
-    }
-
     public void update(Canvas canvas) {
-        //Update game state
-        player.update(canvas);
         ball.update(canvas);
     }
 
@@ -148,27 +131,24 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    public void resetCanvas(Canvas canvas) {
-        canvas.drawColor(Color.BLACK);
-        getContext();
-        int color = ContextCompat.getColor(getContext(), R.color.player);
-        Paint paint = new Paint();
-        paint.setColor(color);
-        // Clear the canvas
+    public void initialScreen(Canvas canvas) {
+        canvasWidth = canvas.getWidth();
+        canvasHeight = canvas.getHeight();
 
-        // Set text properties
+        canvas.drawColor(Color.BLACK);
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+
         paint.setTextSize(100);
         paint.setTextAlign(Paint.Align.CENTER);
 
-        // Calculate the center coordinates of the canvas
-        int centerX = canvas.getWidth() / 2;
-        int centerY = canvas.getHeight() / 3;
+        int centerX = canvasWidth / 2;
+        int centerY = canvasHeight / 3;
 
         // Draw the "Game Over" message
         canvas.drawText("Game Over", centerX, centerY, paint);
 
         centerY = canvas.getHeight() / 3;
-        // Draw the retry and exit options
         paint.setTextSize(50);
         int yOffset = 150;
         paint.getTextBounds("Retry", 0, "Retry".length(), retryTextBounds);
@@ -178,29 +158,24 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         canvas.drawText("Exit", centerX, centerY + yOffset * 2, paint);
     }
 
-    public void initObjects(){
-        player = null;
-        ball = null;
-        breakingBlocksList = null;
-        breakingBlocksList = new ArrayList<BreakingBlocks>();
-        player = new Player(getContext());
-
-        for (int i = 1; i <= 1; i++) {
-            breakingBlocksList.add(new BreakingBlocks(getContext(), player, i));
-        }
-
-        ball = new Ball(getContext(), player, breakingBlocksList);
-        setFocusable(true);
+    private void increaseLevel() {
+        level++;
     }
 
-    public void resetCanvas2() {
+    private void setLevelOne(){
+        level = 1;
+    }
+    private void createLevel(){
+        breakingBlocksList.removeAll(breakingBlocksList);
+        for (int i = 1; i <= 9+level; i++) {
+            breakingBlocksList.add(new BreakingBlocks(getContext(), player, i));
+        }
+    }
 
-        SurfaceHolder surfaceHolder = getHolder();
-
-        initObjects();
-
-        surfaceHolder.addCallback(this);
-        gameLoop = new GameLoop(this, surfaceHolder);
-        gameLoop.startLoop();
+    public void nextLevelGeneration(){
+        player.playerReset();
+        ball.resetBall();
+        increaseLevel();
+        createLevel();
     }
 }

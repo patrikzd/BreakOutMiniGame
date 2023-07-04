@@ -10,6 +10,7 @@ public class Player extends GameObject{
     private float rightX;
     private float bottomY;
     private int livesRemaining = 3;
+    private boolean firstDraw = true;
 
     public Player(Context context) {
 
@@ -19,8 +20,11 @@ public class Player extends GameObject{
 
     public void draw(Canvas canvas) {
 
-        if (leftX == 0){
-            leftX = canvas.getWidth() / 2 - 100;
+        if (firstDraw ){
+            canvasHeight = canvas.getHeight();
+            canvasWidth = canvas.getWidth();
+            leftX = canvasWidth / 2 - 100;
+            firstDraw = false;
         }
         rightX = leftX + 200;
 
@@ -28,11 +32,6 @@ public class Player extends GameObject{
         bottomY = topY + 75;
 
         canvas.drawRect(leftX, topY, rightX, bottomY, paint);
-    }
-
-    @Override
-    public void update(Canvas canvas) {
-
     }
 
     public void setPosition(float positionX) {
@@ -54,6 +53,14 @@ public class Player extends GameObject{
 
     public int getLivesRemaining(){
         return livesRemaining;
+    }
+
+    public void playerReset() {
+        livesRemaining = 3;
+        leftX = canvasWidth / 2 - 100;
+        rightX = leftX + 200;
+        topY = canvasHeight - 150;
+        bottomY = topY + 75;
     }
 }
 

@@ -7,6 +7,8 @@ public abstract class GameObject {
     protected float leftX;
     protected float topY;
     protected Paint paint;
+    protected int canvasHeight;
+    protected int canvasWidth;
 
     public GameObject (){
         super();
@@ -15,7 +17,6 @@ public abstract class GameObject {
 
 
     public abstract void draw(Canvas canvas);
-    public abstract void update(Canvas canvas);
 
     protected double getTopY() {
         return topY;
