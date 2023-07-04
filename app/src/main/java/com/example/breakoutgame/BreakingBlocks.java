@@ -57,7 +57,7 @@ public class BreakingBlocks extends GameObject{
     }
 
     @Override
-    public void update() {
+    public void update(Canvas canvas) {
 
     }
 

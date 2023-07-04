@@ -1,8 +1,12 @@
 package com.example.breakoutgame;
 
+import static java.lang.Thread.sleep;
+
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -18,11 +22,13 @@ import java.util.List;
     Game manages all objects in the game and is responsible for updating all states and render all objects
  */
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
-    private final Player player;
-    private final Ball ball;
+    private Player player;
+    private Ball ball;
     private GameLoop gameLoop;
-    private Context context;
     private List<BreakingBlocks> breakingBlocksList = new ArrayList<BreakingBlocks>();
+    Rect retryTextBounds = new Rect();
+    Rect exitTextBounds = new Rect();
+    boolean firstStart = true;
 
     public Game(Context context) {
         super(context);
@@ -31,18 +37,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
 
-        this.context = context;
         gameLoop = new GameLoop(this, surfaceHolder);
 
+        initObjects();
         //Initialize player
-        player = new Player(context);
-
-        for (int i = 1; i <= 20; i++) {
-            breakingBlocksList.add(new BreakingBlocks(context, player, i));
-        }
-
-        ball = new Ball(context, player, breakingBlocksList);
-        setFocusable(true);
     }
 
     @Override
@@ -62,8 +60,31 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                player.setPosition(event.getX());
-                return true;
+                if (gameLoop.isAlive()) {
+                    player.setPosition(event.getX());
+                    System.out.println("hihi");
+                    return true;
+                } else {
+                    float clickX = event.getX();
+                    float clickY = event.getY();
+
+                    // Calculate the bounds of the text on the canvas
+                    float textLeft = 540 - retryTextBounds.width() / 2;
+                    float textRight = 540 + retryTextBounds.width() / 2;
+                    float textTop = 598 + 150 - retryTextBounds.height();
+                    float textBottom = 598 + 150;
+
+
+                    if (clickX >= textLeft && clickX <= textRight && clickY >= textTop && clickY <= textBottom) {
+                        // Player clicked on the "Retry" text, perform the desired action here
+                        // For example, you can call a method to retry the game
+                        initObjects();
+                        gameLoop.startLoop();
+                    } else if (clickX >= textLeft && clickX <= textRight && clickY >= textTop + 150 && clickY <= textBottom + 150) {
+                        System.exit(0);
+                    }
+                }
+
         }
 
         return super.onTouchEvent(event);
@@ -90,7 +111,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void drawUps(Canvas canvas){
         String averageUps = Double.toString(gameLoop.getAverageUps());
         Paint paint = new Paint();
-        int color = ContextCompat.getColor(context, R.color.magenta);
+        int color = ContextCompat.getColor(getContext(), R.color.magenta);
         paint.setColor(color);
         paint.setTextSize(50);
         canvas.drawText("UPS: " + averageUps, 100, 100, paint);
@@ -99,15 +120,87 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void drawFPS(Canvas canvas){
         String averageUps = Double.toString(gameLoop.getAverageFPS());
         Paint paint = new Paint();
-        int color = ContextCompat.getColor(context, R.color.magenta);
+        int color = ContextCompat.getColor(getContext(), R.color.magenta);
         paint.setColor(color);
         paint.setTextSize(50);
         canvas.drawText("FPS: " + averageUps, 100, 200, paint);
     }
 
-    public void update() {
+    public void update(Canvas canvas) {
         //Update game state
-        player.update();
-        ball.update();
+        player.update(canvas);
+        ball.update(canvas);
+    }
+
+    public boolean playerLost() {
+        if (player.getLivesRemaining() == 0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    public boolean proceedToNextLevel(){
+        if (breakingBlocksList.size() == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void resetCanvas(Canvas canvas) {
+        canvas.drawColor(Color.BLACK);
+        getContext();
+        int color = ContextCompat.getColor(getContext(), R.color.player);
+        Paint paint = new Paint();
+        paint.setColor(color);
+        // Clear the canvas
+
+        // Set text properties
+        paint.setTextSize(100);
+        paint.setTextAlign(Paint.Align.CENTER);
+
+        // Calculate the center coordinates of the canvas
+        int centerX = canvas.getWidth() / 2;
+        int centerY = canvas.getHeight() / 3;
+
+        // Draw the "Game Over" message
+        canvas.drawText("Game Over", centerX, centerY, paint);
+
+        centerY = canvas.getHeight() / 3;
+        // Draw the retry and exit options
+        paint.setTextSize(50);
+        int yOffset = 150;
+        paint.getTextBounds("Retry", 0, "Retry".length(), retryTextBounds);
+        paint.getTextBounds("Exit", 0, "Exit".length(), exitTextBounds);
+
+        canvas.drawText("Retry", centerX, centerY + yOffset, paint);
+        canvas.drawText("Exit", centerX, centerY + yOffset * 2, paint);
+    }
+
+    public void initObjects(){
+        player = null;
+        ball = null;
+        breakingBlocksList = null;
+        breakingBlocksList = new ArrayList<BreakingBlocks>();
+        player = new Player(getContext());
+
+        for (int i = 1; i <= 1; i++) {
+            breakingBlocksList.add(new BreakingBlocks(getContext(), player, i));
+        }
+
+        ball = new Ball(getContext(), player, breakingBlocksList);
+        setFocusable(true);
+    }
+
+    public void resetCanvas2() {
+
+        SurfaceHolder surfaceHolder = getHolder();
+
+        initObjects();
+
+        surfaceHolder.addCallback(this);
+        gameLoop = new GameLoop(this, surfaceHolder);
+        gameLoop.startLoop();
     }
 }

@@ -9,6 +9,7 @@ public class Player extends GameObject{
 
     private float rightX;
     private float bottomY;
+    private int livesRemaining = 3;
 
     public Player(Context context) {
 
@@ -29,7 +30,9 @@ public class Player extends GameObject{
         canvas.drawRect(leftX, topY, rightX, bottomY, paint);
     }
 
-    public void update() {
+    @Override
+    public void update(Canvas canvas) {
+
     }
 
     public void setPosition(float positionX) {
@@ -43,6 +46,14 @@ public class Player extends GameObject{
 
     public float getBottomY() {
         return bottomY;
+    }
+
+    public void reduceLives(){
+        livesRemaining --;
+    }
+
+    public int getLivesRemaining(){
+        return livesRemaining;
     }
 }
 

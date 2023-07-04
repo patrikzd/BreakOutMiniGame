@@ -12,7 +12,7 @@ import java.util.List;
 public class Ball extends GameObject{
 
 
-    private float MAX_SPEED = 20;
+    private float ballSpeed = 30;
     private final Player player;
     private final float ballRadius = 30;
     private boolean hit = false;
@@ -31,31 +31,47 @@ public class Ball extends GameObject{
     }
 
     @Override
-    public synchronized void draw(Canvas canvas) {
-        double paddleWidth = player.getRightX() - player.getLeftX(); // Calculate paddle Width
-        double ballHit = leftX - player.getLeftX(); // Calculate where on the paddle did the ball hit
+    public void draw(Canvas canvas) {
         if (firstDraw) {
             topY = canvas.getHeight() / 2;
             leftX = canvas.getWidth() / 2;
             firstDraw = false;
         }
         canvas.drawCircle(leftX, topY, ballRadius, paint);
+    }
 
+    @Override
+    public void update(Canvas canvas) {
+        double paddleWidth = player.getRightX() - player.getLeftX(); // Calculate paddle Width
+        double ballHit = leftX - player.getLeftX(); // Calculate where on the paddle did the ball hit
+        paint.setTextSize(50);
+        canvas.drawText("Hit: " + hit, 100, 600, paint);
+        canvas.drawText("leftX: " + leftX, 100, 700, paint);
+        canvas.drawText("topY: " + topY, 100, 800, paint);
+
+        if (topY > canvas.getHeight()){
+            player.reduceLives();
+            firstDraw = true;
+            return;
+        }
         for (BreakingBlocks breakingBlocksListArray: breakingBlocksList){
             if (leftX + ballRadius >= breakingBlocksListArray.getLeftX() && leftX - ballRadius <= breakingBlocksListArray.getRightX() &&
                     topY + ballRadius >= breakingBlocksListArray.getTopY() && topY - ballRadius <= breakingBlocksListArray.getBottomY()){
 
-                System.out.println("aaaa");
                 BreakingBlocks var = breakingBlocksList.stream().filter(id -> id.blockNumber == breakingBlocksListArray.blockNumber).findFirst().get();
                 breakingBlocksList2.add(var);
+                if (topY >= breakingBlocksListArray.getBottomY()){
+                    hit = false;
+                }
+                if (topY <= breakingBlocksListArray.getTopY()){
+                    hit = true;
+                }
                 //breakingBlocksList.removeIf(id -> id.blockNumber == breakingBlocksListArray.blockNumber);
                 //breakingBlocksList.remove(var);
-
-
+                ballSpeed = 10 + breakingBlocksList2.size();
             }
         }
         paint.setTextSize(50);
-        canvas.drawText("topY: " + breakingBlocksList2.size(), 100, 800, paint);
 
         breakingBlocksList.removeAll(breakingBlocksList2);
 
@@ -81,15 +97,11 @@ public class Ball extends GameObject{
         if ((leftX - ballRadius <= 0) || (leftX + ballRadius >= canvas.getWidth())) {
             ballXChanges = -ballXChanges;
         }
-    }
-
-    @Override
-    public void update() {
 
         if (hit){
-            topY = topY - MAX_SPEED;
+            topY = topY - ballSpeed;
         } else {
-            topY = topY + MAX_SPEED;
+            topY = topY + ballSpeed;
         }
         leftX = leftX + ballXChanges;
     }
