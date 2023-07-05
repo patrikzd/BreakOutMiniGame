@@ -4,9 +4,11 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 public abstract class GameObject {
-    protected float leftX;
-    protected float topY;
+    protected float leftSideXCoordinates;
+    protected float topSideYCoordinates;
     protected Paint paint;
+    protected int canvasHeight;
+    protected int canvasWidth;
 
     public GameObject (){
         super();
@@ -15,13 +17,12 @@ public abstract class GameObject {
 
 
     public abstract void draw(Canvas canvas);
-    public abstract void update();
 
-    protected double getTopY() {
-        return topY;
+    protected double getTopSideYCoordinates() {
+        return topSideYCoordinates;
     }
 
-    protected double getLeftX() {
-        return leftX;
+    protected double getLeftSideXCoordinates() {
+        return leftSideXCoordinates;
     }
 }

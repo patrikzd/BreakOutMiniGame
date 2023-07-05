@@ -1,15 +1,17 @@
 package com.example.breakoutgame;
 
+import static java.lang.Thread.sleep;
+
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,31 +20,21 @@ import java.util.List;
     Game manages all objects in the game and is responsible for updating all states and render all objects
  */
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
-    private final Player player;
-    private final Ball ball;
+    private Player player;
+    private Ball ball;
     private GameLoop gameLoop;
-    private Context context;
     private List<BreakingBlocks> breakingBlocksList = new ArrayList<BreakingBlocks>();
+    Rect retryTextBounds = new Rect();
+    Rect exitTextBounds = new Rect();
+    int level = 1;
+    int canvasHeight;
+    int canvasWidth;
+
 
     public Game(Context context) {
         super(context);
 
-        //Get surface holder and add callback
-        SurfaceHolder surfaceHolder = getHolder();
-        surfaceHolder.addCallback(this);
-
-        this.context = context;
-        gameLoop = new GameLoop(this, surfaceHolder);
-
-        //Initialize player
-        player = new Player(context);
-
-        for (int i = 1; i <= 20; i++) {
-            breakingBlocksList.add(new BreakingBlocks(context, player, i));
-        }
-
-        ball = new Ball(context, player, breakingBlocksList);
-        setFocusable(true);
+        initObjects();
     }
 
     @Override
@@ -62,8 +54,30 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                player.setPosition(event.getX());
-                return true;
+                if (!hasPlayerLost()) {
+                    player.setPosition(event.getX());
+                    return true;
+                } else{
+                    float clickX = event.getX();
+                    float clickY = event.getY();
+
+                    // Calculate the bounds of the text on the canvas
+                    float textLeft = canvasWidth / 2 - retryTextBounds.width() / 2;
+                    float textRight = canvasWidth / 2 + retryTextBounds.width() / 2;
+                    float textTop = canvasHeight / 3 + 150 - retryTextBounds.height();
+                    float textBottom = canvasHeight / 3 + 150;
+
+
+                    if (clickX >= textLeft && clickX <= textRight && clickY >= textTop && clickY <= textBottom) {
+                        player.playerReset();
+                        ball.resetBall();
+                        setLevelOne();
+                        createLevel();
+                    } else if (clickX >= textLeft && clickX <= textRight && clickY >= textTop + 150 && clickY <= textBottom + 150) {
+                        System.exit(0);
+                    }
+                }
+
         }
 
         return super.onTouchEvent(event);
@@ -77,8 +91,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        drawUps(canvas);
-        drawFPS(canvas);
 
         player.draw(canvas);
         ball.draw(canvas);
@@ -87,27 +99,78 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    public void drawUps(Canvas canvas){
-        String averageUps = Double.toString(gameLoop.getAverageUps());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(context, R.color.magenta);
-        paint.setColor(color);
-        paint.setTextSize(50);
-        canvas.drawText("UPS: " + averageUps, 100, 100, paint);
+    public void update(Canvas canvas) {
+        ball.update(canvas);
     }
 
-    public void drawFPS(Canvas canvas){
-        String averageUps = Double.toString(gameLoop.getAverageFPS());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(context, R.color.magenta);
-        paint.setColor(color);
-        paint.setTextSize(50);
-        canvas.drawText("FPS: " + averageUps, 100, 200, paint);
+    public boolean hasPlayerLost() {
+        if (player.getTotalLivesAvailable() == 0){
+            return true;
+        }else {
+            return false;
+        }
     }
 
-    public void update() {
-        //Update game state
-        player.update();
-        ball.update();
+    public boolean isLevelFinished(){
+        if (breakingBlocksList.size() == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void initialScreen(Canvas canvas) {
+        canvasWidth = canvas.getWidth();
+        canvasHeight = canvas.getHeight();
+
+        canvas.drawColor(Color.BLACK);
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+
+        paint.setTextSize(100);
+        paint.setTextAlign(Paint.Align.CENTER);
+
+        int centerX = canvasWidth / 2;
+        int centerY = canvasHeight / 3;
+
+        // Draw the "Game Over" message
+        canvas.drawText("Game Over", centerX, centerY, paint);
+
+        centerY = canvas.getHeight() / 3;
+        paint.setTextSize(50);
+        int yOffset = 150;
+        paint.getTextBounds("Retry", 0, "Retry".length(), retryTextBounds);
+        paint.getTextBounds("Exit", 0, "Exit".length(), exitTextBounds);
+
+        canvas.drawText("Retry", centerX, centerY + yOffset, paint);
+        canvas.drawText("Exit", centerX, centerY + yOffset * 2, paint);
+    }
+
+    private void setLevelOne(){
+        level = 1;
+    }
+    private void createLevel(){
+        breakingBlocksList.clear();
+        for (int i = 1; i <= 9+level; i++) {
+            breakingBlocksList.add(new BreakingBlocks(getContext(), player, i));
+        }
+    }
+
+    public void nextLevelGeneration(){
+        player.playerReset();
+        ball.resetBall();
+        level++;
+        createLevel();
+    }
+
+    private void initObjects(){
+        SurfaceHolder surfaceHolder = getHolder();
+        surfaceHolder.addCallback(this);
+
+        gameLoop = new GameLoop(this, surfaceHolder);
+        player = new Player(getContext());
+        createLevel();
+        ball = new Ball(getContext(), player, breakingBlocksList);
+        setFocusable(true);
     }
 }
