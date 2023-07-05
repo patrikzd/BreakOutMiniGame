@@ -9,8 +9,8 @@ public class BreakingBlocks extends GameObject{
 
     private final Player player;
     public int blockNumber;
-    private float rightX;
-    private float bottomY;
+    private float rightSideXCoordinates;
+    private float bottomSideYCoordinates;
 
     public BreakingBlocks (Context context, Player player, int blockNumber)
     {
@@ -41,26 +41,26 @@ public class BreakingBlocks extends GameObject{
         float line2TopY = line1TopY + lineGap; // Top y-coordinate for the second line
 
         if (blockNumber <= numRectanglesPerLine) {
-            leftX = (blockNumber - 1) * (rectangleWidth + gapWidth);
-            rightX = leftX + rectangleWidth;
-            topY = line1TopY;
-            bottomY = topY + 50; // Rectangle height
+            leftSideXCoordinates = (blockNumber - 1) * (rectangleWidth + gapWidth);
+            rightSideXCoordinates = leftSideXCoordinates + rectangleWidth;
+            topSideYCoordinates = line1TopY;
+            bottomSideYCoordinates = topSideYCoordinates + 50; // Rectangle height
         } else {
             int blockNumberInLine2 = blockNumber - numRectanglesPerLine;
-            leftX = (blockNumberInLine2 - 1) * (rectangleWidth + gapWidth);
-            rightX = leftX + rectangleWidth;
-            topY = line2TopY;
-            bottomY = topY + 50; // Rectangle height
+            leftSideXCoordinates = (blockNumberInLine2 - 1) * (rectangleWidth + gapWidth);
+            rightSideXCoordinates = leftSideXCoordinates + rectangleWidth;
+            topSideYCoordinates = line2TopY;
+            bottomSideYCoordinates = topSideYCoordinates + 50; // Rectangle height
         }
 
-        canvas.drawRect(leftX, topY, rightX, bottomY, paint);
+        canvas.drawRect(leftSideXCoordinates, topSideYCoordinates, rightSideXCoordinates, bottomSideYCoordinates, paint);
     }
 
-    public float getRightX() {
-        return rightX;
+    public float getRightSideXCoordinates() {
+        return rightSideXCoordinates;
     }
 
-    public float getBottomY() {
-        return bottomY;
+    public float getBottomSideYCoordinates() {
+        return bottomSideYCoordinates;
     }
 }

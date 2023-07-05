@@ -7,9 +7,9 @@ import androidx.core.content.ContextCompat;
 
 public class Player extends GameObject{
 
-    private float rightX;
-    private float bottomY;
-    private int livesRemaining = 3;
+    private float rightSideXCoordinates;
+    private float bottomSideYCoordinates;
+    private int totalLivesAvailable = 3;
     private boolean firstDraw = true;
 
     public Player(Context context) {
@@ -23,44 +23,44 @@ public class Player extends GameObject{
         if (firstDraw ){
             canvasHeight = canvas.getHeight();
             canvasWidth = canvas.getWidth();
-            leftX = canvasWidth / 2 - 100;
+            leftSideXCoordinates = canvasWidth / 2 - 100;
             firstDraw = false;
         }
-        rightX = leftX + 200;
+        rightSideXCoordinates = leftSideXCoordinates + 200;
 
-        topY = canvas.getHeight() - 150;
-        bottomY = topY + 75;
+        topSideYCoordinates = canvas.getHeight() - 150;
+        bottomSideYCoordinates = topSideYCoordinates + 75;
 
-        canvas.drawRect(leftX, topY, rightX, bottomY, paint);
+        canvas.drawRect(leftSideXCoordinates, topSideYCoordinates, rightSideXCoordinates, bottomSideYCoordinates, paint);
     }
 
     public void setPosition(float positionX) {
-        this.leftX = positionX-100;
-        this.rightX = this.leftX + 200;
+        this.leftSideXCoordinates = positionX-100;
+        this.rightSideXCoordinates = this.leftSideXCoordinates + 200;
     }
 
-    public float getRightX() {
-        return rightX;
+    public float getRightSideXCoordinates() {
+        return rightSideXCoordinates;
     }
 
-    public float getBottomY() {
-        return bottomY;
+    public float getBottomSideYCoordinates() {
+        return bottomSideYCoordinates;
     }
 
     public void reduceLives(){
-        livesRemaining --;
+        totalLivesAvailable--;
     }
 
-    public int getLivesRemaining(){
-        return livesRemaining;
+    public int getTotalLivesAvailable(){
+        return totalLivesAvailable;
     }
 
     public void playerReset() {
-        livesRemaining = 3;
-        leftX = canvasWidth / 2 - 100;
-        rightX = leftX + 200;
-        topY = canvasHeight - 150;
-        bottomY = topY + 75;
+        totalLivesAvailable = 3;
+        leftSideXCoordinates = canvasWidth / 2 - 100;
+        rightSideXCoordinates = leftSideXCoordinates + 200;
+        topSideYCoordinates = canvasHeight - 150;
+        bottomSideYCoordinates = topSideYCoordinates + 75;
     }
 }
 

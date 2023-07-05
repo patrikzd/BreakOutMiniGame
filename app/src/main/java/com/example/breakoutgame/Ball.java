@@ -4,8 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 
-import androidx.core.content.ContextCompat;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +17,7 @@ public class Ball extends GameObject{
     private boolean firstDraw = true;
     private float ballXChanges = 0;
     private List<BreakingBlocks> breakingBlocksList = new ArrayList<BreakingBlocks>();
-    private List<BreakingBlocks> breakingBlocksList2 = new ArrayList<BreakingBlocks>();
+    private List<BreakingBlocks> listOfBrokenBlocks = new ArrayList<BreakingBlocks>();
 
     public Ball(Context context, Player player, List<BreakingBlocks> breakingBlocksList) {
         super();
@@ -35,18 +33,18 @@ public class Ball extends GameObject{
         if (firstDraw) {
             canvasWidth = canvas.getWidth();
             canvasHeight = canvas.getHeight();
-            topY = canvasHeight / 2;
-            leftX = canvasWidth / 2;
+            topSideYCoordinates = canvasHeight / 3; // ball middle Y coordinates
+            leftSideXCoordinates = canvasWidth / 2; // ball middle X coordinates
             firstDraw = false;
+            ballSpeed = 10;
         }
-        canvas.drawCircle(leftX, topY, ballRadius, paint);
+        canvas.drawCircle(leftSideXCoordinates, topSideYCoordinates, ballRadius, paint);
     }
 
     public void update(Canvas canvas) {
         paint.setTextSize(50);
-        canvas.drawText("Lives Remaining: " + player.getLivesRemaining(), 0, 100, paint);
-        canvas.drawText("Bricks Destroyed: " + breakingBlocksList2.size(), canvasWidth/2, 100, paint);
-
+        canvas.drawText("Lives Remaining: " + player.getTotalLivesAvailable(), 0, 100, paint);
+        canvas.drawText("Bricks Destroyed: " + listOfBrokenBlocks.size(), canvasWidth/2, 100, paint);
 
         if (checkIfBallIsLost()) {
             return;
@@ -57,7 +55,7 @@ public class Ball extends GameObject{
 
     }
     private boolean checkIfBallIsLost() {
-        if (topY > canvasHeight){
+        if (topSideYCoordinates > canvasHeight){
             player.reduceLives();
             firstDraw = true;
             ballXChanges = 0;
@@ -66,61 +64,62 @@ public class Ball extends GameObject{
         return false;
     }
     private void checkIfBallHitBlocks() {
-        for (BreakingBlocks breakingBlocksListArray: breakingBlocksList){
-            if (leftX + ballRadius >= breakingBlocksListArray.getLeftX() && leftX - ballRadius <= breakingBlocksListArray.getRightX() &&
-                    topY + ballRadius >= breakingBlocksListArray.getTopY() && topY - ballRadius <= breakingBlocksListArray.getBottomY()){
+        for (BreakingBlocks breakingBlock : breakingBlocksList){
+            if (leftSideXCoordinates + ballRadius >= breakingBlock.getLeftSideXCoordinates() && leftSideXCoordinates - ballRadius <= breakingBlock.getRightSideXCoordinates() &&
+                    topSideYCoordinates + ballRadius >= breakingBlock.getTopSideYCoordinates() && topSideYCoordinates - ballRadius <= breakingBlock.getBottomSideYCoordinates()){
 
-                BreakingBlocks var = breakingBlocksList.stream().filter(id -> id.blockNumber == breakingBlocksListArray.blockNumber).findFirst().get();
-                breakingBlocksList2.add(var);
-                if (topY >= breakingBlocksListArray.getBottomY()){
+                BreakingBlocks blockToBeBroken = breakingBlocksList.stream().filter(id -> id.blockNumber == breakingBlock.blockNumber).findFirst().get();
+                listOfBrokenBlocks.add(blockToBeBroken);
+                if (topSideYCoordinates >= breakingBlock.getBottomSideYCoordinates()){
                     ballUpwardMovement = false;
                 }
-                if (topY <= breakingBlocksListArray.getTopY()){
+                if (topSideYCoordinates <= breakingBlock.getTopSideYCoordinates()){
                     ballUpwardMovement = true;
                 }
-                ballSpeed = 30 + breakingBlocksList2.size(); //Increase ball speed
+                ballSpeed = 30 + listOfBrokenBlocks.size(); //Increase ball speed
             }
         }
-        breakingBlocksList.removeAll(breakingBlocksList2);
+        breakingBlocksList.removeAll(listOfBrokenBlocks);
     }
     private void setBallMovement(){
-        double paddleWidth = player.getRightX() - player.getLeftX(); // Calculate paddle Width
-        double ballHit = leftX - player.getLeftX(); // Calculate where on the paddle did the ball hit
+        double paddleWidth = player.getRightSideXCoordinates() - player.getLeftSideXCoordinates(); // Calculate paddle Width
+        double ballHitCoordinates = leftSideXCoordinates - player.getLeftSideXCoordinates(); // Calculate where on the paddle did the ball hit
 
-        if (leftX + ballRadius >= player.getLeftX() && leftX - ballRadius <= player.getRightX() &&
-                topY + ballRadius >= player.getTopY() && topY - ballRadius <= player.getBottomY()){
+        if (leftSideXCoordinates + ballRadius >= player.getLeftSideXCoordinates() && leftSideXCoordinates - ballRadius <= player.getRightSideXCoordinates() &&
+                topSideYCoordinates + ballRadius >= player.getTopSideYCoordinates() && topSideYCoordinates - ballRadius <= player.getBottomSideYCoordinates()){
             ballUpwardMovement = true;
-            if ((ballHit - paddleWidth / 2 <= 20) && ((ballHit - paddleWidth / 2) >= -20))
+            ballSpeed = 30 + listOfBrokenBlocks.size(); //Increase ball speed from initial 10
+            if ((ballHitCoordinates - paddleWidth / 2 <= 20) && ((ballHitCoordinates - paddleWidth / 2) >= -20))
             {
                 ballXChanges = 0;
-            }else if (ballHit > paddleWidth / 2) {
-                ballXChanges = (float) ((ballHit - paddleWidth/2) * 0.1) ;
+            }else if (ballHitCoordinates > paddleWidth / 2) {
+                ballXChanges = (float) ((ballHitCoordinates - paddleWidth/2) * 0.1) ;
             } else {
-                ballXChanges = (float) (-(paddleWidth/2 - ballHit)*0.1);
+                ballXChanges = (float) (-(paddleWidth/2 - ballHitCoordinates)*0.1);
             }
-        } else if ((topY - ballRadius <= 0 && leftX - ballRadius <= 0) ||
-                (leftX + ballRadius >= canvasWidth && topY - ballRadius <= 0) ||
-                (leftX - ballRadius <= 0 && topY + ballRadius >= canvasHeight) ||
-                (leftX + ballRadius >= canvasWidth && topY + ballRadius >= canvasHeight) ||
-                (topY - ballRadius <= 0)) {
+        } else if ((topSideYCoordinates - ballRadius <= 0 && leftSideXCoordinates - ballRadius <= 0) ||
+                (leftSideXCoordinates + ballRadius >= canvasWidth && topSideYCoordinates - ballRadius <= 0) ||
+                (leftSideXCoordinates - ballRadius <= 0 && topSideYCoordinates + ballRadius >= canvasHeight) ||
+                (leftSideXCoordinates + ballRadius >= canvasWidth && topSideYCoordinates + ballRadius >= canvasHeight) ||
+                (topSideYCoordinates - ballRadius <= 0)) {
             ballUpwardMovement = false;
         }
     }
     private void changeBallMovementCoordinates(){
-        if ((leftX - ballRadius <= 0) || (leftX + ballRadius >= canvasWidth)) {
+        if ((leftSideXCoordinates - ballRadius <= 0) || (leftSideXCoordinates + ballRadius >= canvasWidth)) {
             ballXChanges = -ballXChanges;
         }
         if (ballUpwardMovement){
-            topY = topY - ballSpeed;
+            topSideYCoordinates = topSideYCoordinates - ballSpeed;
         } else {
-            topY = topY + ballSpeed;
+            topSideYCoordinates = topSideYCoordinates + ballSpeed;
         }
-        leftX = leftX + ballXChanges;
+        leftSideXCoordinates = leftSideXCoordinates + ballXChanges;
     }
     public void resetBall() {
-        breakingBlocksList2 = new ArrayList<BreakingBlocks>();
-        topY = canvasHeight / 2;
-        leftX = canvasWidth / 2;
+        listOfBrokenBlocks = new ArrayList<BreakingBlocks>();
+        topSideYCoordinates = canvasHeight / 2;
+        leftSideXCoordinates = canvasWidth / 2;
         ballSpeed = 30;
         ballXChanges = 0;
     }

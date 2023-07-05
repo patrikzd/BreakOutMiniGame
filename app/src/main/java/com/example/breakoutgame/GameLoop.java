@@ -1,10 +1,7 @@
 package com.example.breakoutgame;
 
 import android.graphics.Canvas;
-import android.view.Surface;
 import android.view.SurfaceHolder;
-
-import java.util.zip.Adler32;
 
 public class GameLoop extends Thread{
     private boolean isRunning = false;
@@ -27,9 +24,9 @@ public class GameLoop extends Thread{
             try {
                 canvas = surfaceHolder.lockCanvas();
                 synchronized (this){
-                    if (game.playerLost()) {
+                    if (game.hasPlayerLost()) {
                         game.initialScreen(canvas);
-                    } else if (game.proceedToNextLevel()){
+                    } else if (game.isLevelFinished()){
                         game.nextLevelGeneration();
                     } else{
                         game.draw(canvas);

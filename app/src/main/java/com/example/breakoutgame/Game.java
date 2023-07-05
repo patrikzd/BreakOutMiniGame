@@ -10,10 +10,8 @@ import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,17 +34,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public Game(Context context) {
         super(context);
 
-        SurfaceHolder surfaceHolder = getHolder();
-        surfaceHolder.addCallback(this);
-
-        gameLoop = new GameLoop(this, surfaceHolder);
-        breakingBlocksList = new ArrayList<BreakingBlocks>();
-        player = new Player(getContext());
-        for (int i = 1; i <= 9 + level; i++) {
-            breakingBlocksList.add(new BreakingBlocks(getContext(), player, i));
-        }
-        ball = new Ball(getContext(), player, breakingBlocksList);
-        setFocusable(true);
+        initObjects();
     }
 
     @Override
@@ -66,7 +54,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_MOVE:
-                if (!playerLost()) {
+                if (!hasPlayerLost()) {
                     player.setPosition(event.getX());
                     return true;
                 } else{
@@ -115,15 +103,15 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         ball.update(canvas);
     }
 
-    public boolean playerLost() {
-        if (player.getLivesRemaining() == 0){
+    public boolean hasPlayerLost() {
+        if (player.getTotalLivesAvailable() == 0){
             return true;
         }else {
             return false;
         }
     }
 
-    public boolean proceedToNextLevel(){
+    public boolean isLevelFinished(){
         if (breakingBlocksList.size() == 0) {
             return true;
         } else {
@@ -158,15 +146,11 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         canvas.drawText("Exit", centerX, centerY + yOffset * 2, paint);
     }
 
-    private void increaseLevel() {
-        level++;
-    }
-
     private void setLevelOne(){
         level = 1;
     }
     private void createLevel(){
-        breakingBlocksList.removeAll(breakingBlocksList);
+        breakingBlocksList.clear();
         for (int i = 1; i <= 9+level; i++) {
             breakingBlocksList.add(new BreakingBlocks(getContext(), player, i));
         }
@@ -175,7 +159,18 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void nextLevelGeneration(){
         player.playerReset();
         ball.resetBall();
-        increaseLevel();
+        level++;
         createLevel();
+    }
+
+    private void initObjects(){
+        SurfaceHolder surfaceHolder = getHolder();
+        surfaceHolder.addCallback(this);
+
+        gameLoop = new GameLoop(this, surfaceHolder);
+        player = new Player(getContext());
+        createLevel();
+        ball = new Ball(getContext(), player, breakingBlocksList);
+        setFocusable(true);
     }
 }
